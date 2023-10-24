@@ -350,3 +350,20 @@
 ### 大手メディア企業では現在オンプレミス環境にストレージとデータベースを有していますが、ストレージ容量が不足しており、これを機会にAWSサービスを使用することにしました。要件としては、オンプレミス環境に保存されているデータはシンプルでシーケンシャルなデータであり、データ量が非常に多いです。また、シーケンシャルデータに関連づいた画像データを別に保存することも求められています
 
 = データ量が非常に多い画像データを保存するにはS3 Standard（標準）クラスが向いています。DynamoDBはシンプルなシーケンシャルなデータの保存に適したNoSQL型のキーバリューストアとして機能する最適なデータベースです。
+
+### 「1. 既存のS3バケットのバージョニングを有効にします。」の対応
+
+= aws s3api put-bucket-versioning --bucket bucket1 --versioning-configuration Status=Enabled
+
+### 2. 新規にバージニア北部を指定してレプリケーション先となるS3バケットを作成し、バージョニングを有効にします
+
+= aws s3api create-bucket --bucket bucket2 --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1, 
+aws s3api put-bucket-versioning --bucket bucket2 --versioning-configuration Status=Enabled
+
+### 「3. レプリケーション元となる既存のS3バケットに対して、バージニア北部のS3バケットをターゲットにしてレプリケーションの設定をします。」
+
+= aws s3api put-bucket-replication --bucket bucket1 --replication-configuration file://replication.json
+
+### 「4. 既存のS3バケットにオブジェクト（Sample）を追加します。」
+
+= aws s3 cp Sample s3://bucket1
